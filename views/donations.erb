@@ -1,0 +1,22 @@
+<table class="table">
+  <thead>
+    <tr>
+      <th>שם התורם</th>      
+      <th>מפלגה</th>
+      <th>שם המועמד</th>
+      <th>סכום</th>
+      <th>תאריך</th>
+    </tr>
+  </thead>
+  <tbody>
+  	<% @donations.each do |donation| %>
+  		<tr>
+  			<td><a href="http://www.google.co.il/#q=<%= donation[0] %>" target="_blank"><%= donation[0] %></a></td>
+  			<td><%= donation[1] %></td>
+  			<td><%= donation[2] %></td>
+  			<td><%= donation[3] %></td>
+  			<td><%= donation[4].strftime('%d-%m-%Y') %></td>
+  		</tr>
+  	<% end %>    
+  </tbody>
+</table>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="חיפוש תורמים למועמדים בפריימריז של מפלגות שונות">
+    <meta name="author" content="Yoni Yom-Tov">
+
+    <meta property="og:image" content="/img/money.jpg"/>
+    <meta property="og:title" content="תורמים לפריימריז"/>
+    <meta property="og:description" content="חיפוש תורמים למועמדים בפריימריז של מפלגות שונות"/>
+    <meta property="og:type" content="website"/>
+
+    <title>תורמים לפריימריז</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <!-- Bootstrap RTL -->
+    <link href="/css/bootstrap2-rtl.min.css" rel="stylesheet">
+
+    <style type="text/css">
+    	.body {
+    		direction: rtl;
+    	}
+    	#donor-input {
+    		height: 28px;
+    	}
+    	.credit {
+    		margin-top: 10px;
+    		margin-right: 50px;
+    	}
+    	#loader {
+    		display: none;;
+    		margin-top: -35px;
+			margin-right: 300px;
+    	}
+    </style>
+
+  </head>
+
+  <body dir="rtl">
+
+  	<div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="brand" href="#">תורמים למועמדים לפריימריז</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container" style="margin-top:100px">
+    	<div class="row">
+    		<div class="span4">
+    			<form id="search-form" class="form-inline">
+				    <input type="text" class="form-control" id="donor-input" autocomplete="off" placeholder="שם התורם">
+				    <input type="hidden" id="donor-id-input">
+				    <button type="submit" class="btn btn-primary btn-large">חפש</button>
+				    <img src="/img/loader.gif" alt="loading..." id="loader">
+			    </form>
+    		</div>
+  			<div class="span7">
+  				<h2>
+  					דוגמאות: <a href="#506">ולדימיר גוסינסקי</a>, <a href="#3014">אריה סבן</a>, 
+  					<a href="#124">עודד כספי</a>, <a href="#3277">משה חדיף</a>, <a href="#1961">מייקל אייזנברג</a>,
+  					<a href="#5433">צ'רלס ברונפמן</a>
+  				</h2>
+  			</div>    		
+    	</div>
+
+    	<div id="results" class="row">
+    		
+    	</div>
+
+    	<div id="footer" class="row">
+    		<nav class="navbar navbar-default navbar-fixed-bottom">
+		        <div class="navbar-inner navbar-content-center">
+		            <p class="text-muted credit">המידע נלקח <a href="http://primaries.publish.mevaker.gov.il/index.aspx">מאתר מבקר המדינה</a> ועובד על ידי <a href="http://il.linkedin.com/in/yoniyomtov/">יוני יום-טוב</a></p>
+		        </div>
+		    </nav>
+		</div>
+    </div> <!-- /container -->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+	<script src="/js/bootstrap-typeahead-rtl.js"></script>
+	<script src="/js/jquery.ba-hashchange.min.js"></script>	
+
+	<script>
+		$(function() {
+
+			function setHash(donorId){
+				window.location.href = window.location.protocol + '//' + 
+			    		window.location.host + window.location.pathname + '#' + donorId;
+			}
+
+			var data = <%= @donors %>;
+			$('#donor-input').typeahead({
+			    source: function(query, process) {
+			        objects = [];
+			        map = {};
+			        $.each(data, function(i, object) {
+			            map[object.label] = object.value;
+			            objects.push(object.label);
+			        });
+			        process(objects);
+			    },
+			    updater: function(item) {
+			    	$('#donor-id-input').val(map[item]);
+
+			        return item;
+			    }
+			}); 		
+
+			$('#search-form').submit(function(){
+				setHash($(this).find('#donor-id-input').val());
+
+				return false;
+			});
+
+			$(window).hashchange( function(){
+				var donorId = window.location.hash.replace(/#/, '');
+				if (donorId != parseInt(donorId)) return;
+
+				$('#loader').show();
+				$.get('/donor/' + donorId,
+					function(data){
+						$('#results').html(data);
+					}
+				).error(function(){
+					alert('קרתה תאונה');
+				}).done(function(){
+					$('#loader').hide();
+				});			    
+			});
+
+			$('#donor-input').focus();
+		});
+	</script>
+
+  </body>
+</html>
