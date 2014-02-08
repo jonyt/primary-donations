@@ -32,16 +32,16 @@ require 'json'
 	end
 
 	get '/' do
-	  puts "*** index"	
-	  "hi"
-	 #  begin
-	 #  	@donors = Donor.all.
-		#   	inject([]){|mem, donor| mem << {:value => donor.id, :label => donor.name}}.
-		#   	to_json
-		# erb :index		
-  # 	  rescue Exception => e
-  # 		halt 500
-  # 	  end		  
+	  # puts "*** index"	
+	  # "hi"
+	  begin
+	  	@donors = Donor.all.
+		  	inject([]){|mem, donor| mem << {:value => donor.id, :label => donor.name}}.
+		  	to_json
+		erb :index		
+  	  rescue Exception => e
+  		halt 500
+  	  end		  
 	end
 
 	get '/donor/:id' do
