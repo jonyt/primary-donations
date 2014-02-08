@@ -4,6 +4,10 @@ require 'json'
 
 class App < Sinatra::Base
 
+	get '/' do
+		"hi"
+	end
+=begin
 	db_url = (production? ? ENV['DATABASE_URL'] : 'postgres://yoni:telaviv@localhost/knesset_donations')
 
 	configure do
@@ -47,4 +51,5 @@ class App < Sinatra::Base
 
 		erb :donations
 	end
+=end	
 end
