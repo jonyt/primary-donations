@@ -1,6 +1,6 @@
-require 'sinatra/base'
-require 'sequel'
-require 'json'
+require 'sinatra'
+#require 'sequel'
+#require 'json'
 
 class App < Sinatra::Base
 
