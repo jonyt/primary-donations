@@ -1,16 +1,14 @@
 require 'sinatra'
-#require 'sequel'
-#require 'json'
+require 'sequel'
+require 'json'
 
 #class App < Sinatra::Base
 
-	get '/' do
-		"hi"
-	end
-=begin
-	db_url = (production? ? ENV['DATABASE_URL'] : 'postgres://yoni:telaviv@localhost/knesset_donations')
+	
+	
 
 	configure do
+	  db_url = (production? ? ENV['DATABASE_URL'] : 'postgres://yoni:telaviv@localhost/knesset_donations')	
 	  puts "*************** #{db_url}"	
 	  Sequel::Model.db = Sequel.connect db_url
 	  require './models/donor'
@@ -51,5 +49,4 @@ require 'sinatra'
 
 		erb :donations
 	end
-=end	
 #end
