@@ -2,7 +2,7 @@ require 'sinatra'
 #require 'sequel'
 #require 'json'
 
-class App < Sinatra::Base
+#class App < Sinatra::Base
 
 	get '/' do
 		"hi"
@@ -52,4 +52,4 @@ class App < Sinatra::Base
 		erb :donations
 	end
 =end	
-end
+#end
