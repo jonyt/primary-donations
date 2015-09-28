@@ -1,6 +1,13 @@
 require 'time'
 require 'logger'
 require 'httparty'
+require 'sequel'
+
+Sequel.connect('postgres://yoni:telaviv@localhost:5432/primary_donations')
+require_relative '../models/party'
+require_relative '../models/candidate'
+require_relative '../models/donor'
+require_relative '../models/donation'
 
 $logger = Logger.new(STDOUT)
 
@@ -12,9 +19,8 @@ class Crawler
     parties.each do |party|
       $logger.info "Getting candidates for party [#{party.name}]"
       response = self.class.post('', party.to_params)
-      # puts response.parsed_response.inspect
-      response.parsed_response.each do |candidate_data|
-        party << Candidate.new(candidate_data)
+      response.parsed_response.each do |candidate_params|
+        party.add_candidate(Candidate.new.from_params(candidate_params))
       end
       $logger.info "[#{party.name}] has #{party.candidates.size} candidates"
     end
@@ -22,85 +28,35 @@ class Crawler
 
   def get_candidate_donations(candidate)
     response = self.class.post('', candidate.to_params)
-    response.parsed_response.first.each do |donation_data|
-      candidate << Donation.new(donation_data)
+    response.parsed_response.first.each do |donation_params|
+      donor = Donor.find_or_create_from_params(donation_params)
+      donation = Donation.new.from_params(donation_params)
+      donation.donor = donor
+      donation.candidate = candidate
+      donation.save
+      $logger.info "Saved donation #{donation.inspect}"
     end
   end
 end
 
-class Party
-  attr_reader :id, :name, :candidates
-
-  def initialize(id, name)
-    @id = id
-    @name = name
-    @candidates = []
-  end
-
-  def <<(candidate)
-    @candidates << candidate
-  end
-
-  def to_params
-    {body: {action: 'gcbp', p: @id}}
-  end
-end
-
-class Candidate
-  attr_reader :donations
-
-  def initialize(params)
-    @id = params['ID']
-    @name = params['Name']
-    @donations = []
-  end
-
-  def <<(donation)
-    @donations << donation
-  end
-
-  def to_params
-    {body: {action: 'gds', d: d_param}}
-  end
-
-  private
-
-  def d_param
-    '{"PartyID":null,"EntityID":"' + @id.to_s + '","EntityTypeID":1,"PublicationSearchType":"1","GD_Name":"","CityID":""
-,"CountryID":"","FromDate":"","ToDate":"","FromSum":"","ToSum":"","ID":null,"State":0,"URL":null,"IsControl"
-:false,"IsUpdate":false}'
-  end
-end
-
-class Donation
-  attr_reader :donor, :shekels, :date
-
-  def initialize(params)
-    @donor   = params['GD_Name']
-    @country = params['Country']
-    @shekels = params['GD_Sum']
-    @date    = Time.at(params['GD_Date'].gsub(/\D/, '').to_i / 1000).to_date 
-  end
-end
-
 parties = [
-  Party.new(14, 'אגודת החרדים – דגל התורה'),
-  Party.new(8, 'ארץ ישראל שלנו'),
-  Party.new(1, 'בל"ד- אלתגמוע אלווטני אלדמוקרטי'),
-  Party.new(3, 'הליכוד תנועה לאומית'),
-  Party.new(7, 'התקווה'),
-  Party.new(11, 'חד"ש- המפלגה הקומוניסטית הישראלית'),
-  Party.new(15, 'יש עתיד – בראשות יאיר לפיד'),
-  Party.new(12, 'ישראל ביתנו'),
-  Party.new(2, 'מפד"ל החדשה- הבית היהודי'),
-  Party.new(4, 'מפלגת העבודה הישראלית'),
-  Party.new(16, 'מפלגת העצמאות'),
-  Party.new(5, 'מר"צ - יחד'),
-  Party.new(13, 'קדימה'),
-  Party.new(9, 'רשימת האיחוד הערבי'),
-  Party.new(10, 'ש"ס – התאחדות הספרדים העולמית שומרי תורה'),
-  Party.new(17, 'תע"ל-התנועה הערבית להתחדשות'),
-  Party.new(6, 'תקומה')
+  Party.find_or_create(web_id: 14, name: 'אגודת החרדים – דגל התורה'),
+  Party.find_or_create(web_id: 8, name: 'ארץ ישראל שלנו'),
+  Party.find_or_create(web_id: 1, name: 'בל"ד- אלתגמוע אלווטני אלדמוקרטי'),
+  Party.find_or_create(web_id: 3, name: 'הליכוד תנועה לאומית'),
+  Party.find_or_create(web_id: 7, name: 'התקווה'),
+  Party.find_or_create(web_id: 11, name: 'חד"ש- המפלגה הקומוניסטית הישראלית'),
+  Party.find_or_create(web_id: 15, name: 'יש עתיד – בראשות יאיר לפיד'),
+  Party.find_or_create(web_id: 12, name: 'ישראל ביתנו'),
+  Party.find_or_create(web_id: 2, name: 'מפד"ל החדשה- הבית היהודי'),
+  Party.find_or_create(web_id: 4, name: 'מפלגת העבודה הישראלית'),
+  Party.find_or_create(web_id: 16, name: 'מפלגת העצמאות'),
+  Party.find_or_create(web_id: 5, name: 'מר"צ - יחד'),
+  Party.find_or_create(web_id: 13, name: 'קדימה'),
+  Party.find_or_create(web_id: 9, name: 'רשימת האיחוד הערבי'),
+  Party.find_or_create(web_id: 10, name: 'ש"ס – התאחדות הספרדים העולמית שומרי תורה'),
+  Party.find_or_create(web_id: 17, name: 'תע"ל-התנועה הערבית להתחדשות'),
+  Party.find_or_create(web_id: 6, name: 'תקומה')
 ]
 
 crawler = Crawler.new
@@ -110,29 +66,3 @@ parties.each do |party|
     crawler.get_candidate_donations(candidate)
   end  
 end
-
-# puts parties.inspect
-
-
-
-
-
-# parties = {
-#   14 => 'אגודת החרדים – דגל התורה',
-#   8 => 'ארץ ישראל שלנו ',
-#   1 => 'בל"ד- אלתגמוע אלווטני אלדמוקרטי ',
-#   3 => 'הליכוד תנועה לאומית ',
-#   7 => 'התקווה',
-#   11 => 'חד"ש- המפלגה הקומוניסטית הישראלית',
-#   15 => 'יש עתיד – בראשות יאיר לפיד',
-#   12 => 'ישראל ביתנו',
-#   2 => 'מפד"ל החדשה- הבית היהודי',
-#   4 => 'מפלגת העבודה הישראלית ',
-#   16 => 'מפלגת העצמאות',
-#   5 => 'מר"צ - יחד',
-#   13 => 'קדימה',
-#   9 => 'רשימת האיחוד הערבי',
-#   10 => 'ש"ס – התאחדות הספרדים העולמית שומרי תורה',
-#   17 => 'תע"ל-התנועה הערבית להתחדשות',
-#   6 => 'תקומה'
-# }
